@@ -216,3 +216,87 @@ export async function getHallOfFame(limit = 30): Promise<(Photo & { profiles: Pr
     .limit(limit);
   return (data as any) || [];
 }
+
+// =================== CAMPAIGNS ===================
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  emoji: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface CampaignOption {
+  id: string;
+  campaign_id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  sort_order: number;
+}
+
+export interface CampaignVote {
+  id: string;
+  campaign_id: string;
+  profile_id: string;
+  option_id: string;
+  voted_at: string;
+}
+
+export async function getCampaigns(): Promise<Campaign[]> {
+  const { data } = await supabase
+    .from('campaigns')
+    .select('*')
+    .order('created_at', { ascending: false });
+  return data || [];
+}
+
+export async function getCampaign(id: string): Promise<Campaign | undefined> {
+  const { data } = await supabase.from('campaigns').select('*').eq('id', id).single();
+  return data || undefined;
+}
+
+export async function getCampaignOptions(campaignId: string): Promise<CampaignOption[]> {
+  const { data } = await supabase
+    .from('campaign_options')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .order('sort_order');
+  return data || [];
+}
+
+export async function getCampaignVotes(campaignId: string): Promise<CampaignVote[]> {
+  const { data } = await supabase
+    .from('campaign_votes')
+    .select('*')
+    .eq('campaign_id', campaignId);
+  return data || [];
+}
+
+export async function upsertCampaignVote(campaignId: string, profileId: string, optionId: string) {
+  // Upsert: if this person already voted in this campaign, update their choice
+  return await supabase
+    .from('campaign_votes')
+    .upsert(
+      { campaign_id: campaignId, profile_id: profileId, option_id: optionId, voted_at: new Date().toISOString() },
+      { onConflict: 'campaign_id,profile_id' }
+    );
+}
+
+export async function createCampaign(campaign: Omit<Campaign, 'id' | 'created_at'>) {
+  return await supabase.from('campaigns').insert(campaign).select().single();
+}
+
+export async function createCampaignOption(option: Omit<CampaignOption, 'id'>) {
+  return await supabase.from('campaign_options').insert(option);
+}
+
+export async function deleteCampaign(id: string) {
+  return await supabase.from('campaigns').delete().eq('id', id);
+}
+
+export async function toggleCampaignActive(id: string, active: boolean) {
+  return await supabase.from('campaigns').update({ active }).eq('id', id);
+}

@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
-import { adminCreateProfile, adminAddPhoto, adminDeleteProfile } from './actions';
+import { adminCreateProfile, adminAddPhoto, adminDeleteProfile, adminUpdateProfilePic } from './actions';
+import { supabase } from '@/lib/db';
 import type { Profile, Photo } from '@/lib/db';
 
 // ===================== COMPRESS HELPER =====================
@@ -186,6 +187,174 @@ export function AddPhotoForm({ profiles }: { profiles: Profile[] }) {
       )}
       <button type="submit" disabled={status === 'loading'} className="btn btn-wood" style={{ width: '100%', justifyContent: 'center' }}>
         {status === 'loading' ? '⏳ Uploading...' : '📸 Add Photo'}
+      </button>
+    </form>
+  );
+}
+
+// ===================== UPDATE PROFILE PIC FORM =====================
+export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
+  const [profileId, setProfileId] = useState('');
+  const [photos, setPhotos] = useState<{ id: string; url: string }[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null); // existing URL
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle');
+  const [msg, setMsg] = useState('');
+
+  const fetchPhotos = async (id: string) => {
+    setLoadingPhotos(true);
+    setPhotos([]);
+    setSelected(null);
+    setUploadFile(null);
+    try {
+      const { data } = await supabase.from('photos').select('id, url').eq('profile_id', id).order('uploaded_at', { ascending: false });
+      setPhotos(data || []);
+    } finally { setLoadingPhotos(false); }
+  };
+
+  const onProfileChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    setProfileId(id);
+    if (id) fetchPhotos(id);
+    else setPhotos([]);
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    if (!raw.type.startsWith('image/')) { alert('Images only!'); return; }
+    setSelected(null); // deselect existing when uploading new
+    const webp = await compressToWebp(raw);
+    const named = new File([webp], raw.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
+    setUploadFile(named);
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileId) { setMsg('❌ Select a profile'); return; }
+    if (!selected && !uploadFile) { setMsg('❌ Pick or upload a photo'); return; }
+    setStatus('loading');
+    setMsg('');
+    try {
+      const fd = new FormData();
+      fd.set('profileId', profileId);
+      if (selected) fd.set('existingUrl', selected);
+      if (uploadFile && !selected) fd.set('file', uploadFile);
+      await adminUpdateProfilePic(fd);
+      setMsg('✅ Profile photo updated!');
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err: any) {
+      setMsg('❌ ' + err.message);
+    } finally { setStatus('idle'); }
+  };
+
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <form onSubmit={submit} style={{ display: 'grid', gap: '1rem' }}>
+      {/* Profile selector */}
+      <div>
+        <label className="field-label">Select Profile *</label>
+        <select value={profileId} onChange={onProfileChange} required className="field-input">
+          <option value="">— Choose person —</option>
+          {profiles.map(p => (
+            <option key={p.id} value={p.id}>{p.call_name} ({p.name})</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Existing photos grid */}
+      {profileId && (
+        <div>
+          <label className="field-label">Choose Existing Photo</label>
+          {loadingPhotos ? (
+            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-3)', fontSize: '.85rem' }}>Loading photos...</div>
+          ) : photos.length === 0 ? (
+            <div style={{ padding: '.75rem', borderRadius: 8, background: 'var(--surface-2)', fontSize: '.82rem', color: 'var(--text-3)', textAlign: 'center' }}>
+              No photos yet — upload one below
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '.5rem' }}>
+              {photos.map(ph => (
+                <div
+                  key={ph.id}
+                  onClick={() => { setSelected(ph.url); setUploadFile(null); }}
+                  style={{
+                    cursor: 'pointer',
+                    borderRadius: 8,
+                    border: selected === ph.url ? '3px solid var(--green)' : '2px solid var(--border)',
+                    overflow: 'hidden',
+                    aspectRatio: '1',
+                    transition: 'border .15s, transform .15s',
+                    transform: selected === ph.url ? 'scale(1.05)' : 'scale(1)',
+                    position: 'relative',
+                  }}
+                >
+                  <img src={ph.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {selected === ph.url && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'rgba(45,138,78,.25)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.5rem',
+                    }}>✅</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* OR divider */}
+      {profileId && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text-3)' }}>OR UPLOAD NEW</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
+      )}
+
+      {/* Upload new */}
+      {profileId && (
+        <div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
+          <div
+            onClick={() => fileRef.current?.click()}
+            style={{
+              border: uploadFile ? '2px solid var(--green)' : '2px dashed var(--border)',
+              borderRadius: 10, padding: '1rem', textAlign: 'center', cursor: 'pointer',
+              background: uploadFile ? 'var(--green-light)' : 'var(--surface-2)', transition: 'all .15s',
+            }}
+          >
+            <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>{uploadFile ? '✅' : '📤'}</div>
+            <div style={{ fontSize: '.82rem', fontWeight: 600, color: uploadFile ? 'var(--green-dark)' : 'var(--text-2)' }}>
+              {uploadFile ? uploadFile.name : 'Click to upload a new photo'}
+            </div>
+            <div style={{ fontSize: '.72rem', color: 'var(--text-3)', marginTop: 3 }}>Auto-converts to WebP</div>
+          </div>
+          {uploadFile && (
+            <img
+              src={URL.createObjectURL(uploadFile)}
+              alt="preview"
+              style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: 8, marginTop: 8 }}
+            />
+          )}
+        </div>
+      )}
+
+      {msg && (
+        <div style={{
+          padding: '.75rem 1rem', borderRadius: 8,
+          background: msg.startsWith('✅') ? 'var(--green-light)' : 'var(--red-light)',
+          color: msg.startsWith('✅') ? 'var(--green-dark)' : 'var(--red)',
+          fontWeight: 700, fontSize: '.88rem',
+        }}>{msg}</div>
+      )}
+
+      <button type="submit" disabled={status === 'loading' || !profileId} className="btn btn-green" style={{ width: '100%', justifyContent: 'center' }}>
+        {status === 'loading' ? '⏳ Saving...' : '🖼️ Set as Profile Photo'}
       </button>
     </form>
   );

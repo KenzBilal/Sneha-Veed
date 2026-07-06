@@ -62,3 +62,33 @@ export async function adminDeleteProfile(profileId: string) {
   revalidatePath('/');
   revalidatePath('/admin');
 }
+
+export async function adminUpdateProfilePic(formData: FormData) {
+  const profileId  = formData.get('profileId') as string;
+  const existingUrl = formData.get('existingUrl') as string | null;
+  const file        = formData.get('file') as File | null;
+
+  if (!profileId) throw new Error('Profile ID required');
+
+  let url: string | null = null;
+
+  if (existingUrl && existingUrl.length > 0) {
+    // use an existing uploaded photo as profile pic
+    url = existingUrl;
+  } else if (file && file.size > 0) {
+    url = await uploadImageToStorage(file, 'avatars');
+  } else {
+    throw new Error('Select an existing photo or upload a new one');
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ profile_pic: url })
+    .eq('id', profileId);
+
+  if (error) throw new Error('Update failed: ' + error.message);
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+  revalidatePath(`/profile/${profileId}`);
+}

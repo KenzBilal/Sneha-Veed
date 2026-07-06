@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { getProfiles, getPhotosByProfile } from '@/lib/db';
-import { CreateProfileForm, AddPhotoForm, ProfilesTable } from './AdminClient';
+import { getProfiles, getPhotosByProfile, getCampaigns, getCampaignOptions, getCampaignVotes } from '@/lib/db';
+import { CreateProfileForm, AddPhotoForm, ProfilesTable, UpdateProfilePicForm } from './AdminClient';
+import { CreateCampaignForm, CampaignsTable } from '@/components/AdminCampaigns';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '⚙️ Admin | Sneha Veed' };
@@ -18,11 +19,20 @@ export default async function AdminPage() {
   if (!(await isLocal())) return notFound();
 
   const profiles = await getProfiles();
+  const campaigns = await getCampaigns();
 
   const profilesWithCount = await Promise.all(
     profiles.map(async (p) => {
       const photos = await getPhotosByProfile(p.id);
       return { ...p, photoCount: photos.length };
+    })
+  );
+
+  const campaignsWithData = await Promise.all(
+    campaigns.map(async (c) => {
+      const options = await getCampaignOptions(c.id);
+      const votes   = await getCampaignVotes(c.id);
+      return { ...c, options, voteCount: votes.length };
     })
   );
 
@@ -102,6 +112,26 @@ export default async function AdminPage() {
           </div>
         </div>
 
+        {/* SET PROFILE PIC */}
+        <div className="card fade-up delay-3" style={{ marginTop: '2rem' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'var(--sun-light)' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#b37d00' }}>🖼️ Set Profile Photo</div>
+            <div style={{ fontSize: '.82rem', color: '#b37d00', opacity: .8, marginTop: '.2rem' }}>
+              Pick from existing uploaded photos or upload a brand new one. Auto-converts to WebP.
+            </div>
+          </div>
+          <div className="card-body">
+            {profiles.length === 0 ? (
+              <div className="empty" style={{ padding: '2rem' }}>
+                <div className="empty-emoji">👥</div>
+                <div className="empty-sub">Create a profile first!</div>
+              </div>
+            ) : (
+              <UpdateProfilePicForm profiles={profiles} />
+            )}
+          </div>
+        </div>
+
         {/* PROFILES TABLE */}
         <div className="card fade-up delay-3" style={{ marginTop: '2rem' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
@@ -114,6 +144,32 @@ export default async function AdminPage() {
           </div>
           <div style={{ padding: '0' }}>
             <ProfilesTable profiles={profilesWithCount} />
+          </div>
+        </div>
+
+        {/* CAMPAIGNS */}
+        <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr 1fr', marginTop: '2rem' }}>
+          <div className="card fade-up delay-4">
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(90deg, var(--sun-light), var(--wood-light))' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#b37d00' }}>🎯 Create Campaign</div>
+              <div style={{ fontSize: '.82rem', color: '#b37d00', opacity: .8, marginTop: '.2rem' }}>
+                World Cup, best dressed, who is most likely to… anything goes.
+              </div>
+            </div>
+            <div className="card-body">
+              <CreateCampaignForm />
+            </div>
+          </div>
+
+          <div className="card fade-up delay-4">
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 900 }}>
+                🎯 All Campaigns ({campaigns.length})
+              </div>
+            </div>
+            <div style={{ padding: 0 }}>
+              <CampaignsTable campaigns={campaignsWithData} />
+            </div>
           </div>
         </div>
       </div>
