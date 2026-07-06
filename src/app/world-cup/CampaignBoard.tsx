@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { assignToOption } from '../actions';
+import { assignToOption } from './actions';
 import type { Profile, CampaignOption, CampaignVote } from '@/lib/db';
 
 interface Props {

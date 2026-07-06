@@ -1,22 +1,18 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCampaign, getCampaignOptions, getCampaignVotes, getProfiles } from '@/lib/db';
 import CampaignBoard from './CampaignBoard';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const c = await getCampaign(id);
-  return { title: c ? `${c.emoji} ${c.name} | Sneha Veed` : 'Not Found' };
-}
+export const metadata = { title: '⚽ World Cup | Sneha Veed' };
 
-export default async function CampaignPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+const WORLD_CUP_ID = 'c0000000-0000-0000-0000-000000000001';
+
+export default async function WorldCupPage() {
   const [campaign, options, votes, profiles] = await Promise.all([
-    getCampaign(id),
-    getCampaignOptions(id),
-    getCampaignVotes(id),
+    getCampaign(WORLD_CUP_ID),
+    getCampaignOptions(WORLD_CUP_ID),
+    getCampaignVotes(WORLD_CUP_ID),
     getProfiles(),
   ]);
 
@@ -36,9 +32,6 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
     <div className="page-wrap">
       {/* Header */}
       <div style={{ padding: '2.5rem 0 2rem' }} className="fade-up">
-        <Link href="/campaigns" style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', fontSize: '.85rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '1rem' }}>
-          ← All Campaigns
-        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '.5rem' }}>
           <span style={{ fontSize: '3rem' }}>{campaign.emoji}</span>
           <div>
@@ -46,9 +39,6 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             {campaign.description && <p style={{ color: 'var(--text-2)', marginTop: '.25rem' }}>{campaign.description}</p>}
           </div>
         </div>
-        {!campaign.active && (
-          <span className="tag tag-red" style={{ marginTop: '.5rem' }}>🔒 Campaign Closed — Viewing Results</span>
-        )}
       </div>
 
       {/* Stats strip */}
@@ -67,7 +57,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
         </div>
         <div className="stat-block">
           <div className="stat-num">{options.length}</div>
-          <div className="stat-label">🏳️ Options</div>
+          <div className="stat-label">🏳️ Teams</div>
         </div>
       </div>
 
@@ -107,7 +97,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
           <span className="section-sub">Click any name to change their team</span>
         </div>
         <CampaignBoard
-          campaignId={id}
+          campaignId={WORLD_CUP_ID}
           profiles={profiles}
           options={options}
           initialVotes={votes}
