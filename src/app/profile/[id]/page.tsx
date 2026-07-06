@@ -1,78 +1,129 @@
-import { getProfile, getPhotosByProfile, calculateTags } from "@/lib/db";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Uploader, PhotoActions } from "@/components/Uploader";
-import { ArrowLeft } from "lucide-react";
+import { notFound } from 'next/navigation';
+import { getProfile, getPhotosByProfile, calculateTags, getProfileStats } from '@/lib/db';
+import Uploader from '@/components/Uploader';
+import PhotoActions from '@/components/PhotoActions';
+import TagBadge from '@/components/TagBadge';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const profile = await getProfile(id);
+  return { title: profile ? `${profile.call_name} | Sneha Veed 🏡` : 'Not Found' };
+}
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const profile = await getProfile(id);
-  
-  if (!profile) {
-    return notFound();
-  }
+  if (!profile) return notFound();
 
-  const tags = await calculateTags(id);
-  const photos = await getPhotosByProfile(id);
+  const [tags, photos, stats] = await Promise.all([
+    calculateTags(id),
+    getPhotosByProfile(id),
+    getProfileStats(id),
+  ]);
+
+  // Vibe percentage 0-100 (50 = neutral)
+  const totalVotes = stats.totalLikes + stats.totalDislikes;
+  const vibePercent = totalVotes > 0 ? Math.round((stats.totalLikes / totalVotes) * 100) : 50;
+  const vibeEmoji = vibePercent >= 70 ? '😇' : vibePercent >= 50 ? '😐' : vibePercent >= 30 ? '😅' : '💀';
 
   return (
-    <div className="container animate-fade-in">
-      <header className="header-nav">
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-          <ArrowLeft size={20} /> Back to Group
-        </Link>
-        <div className="header-logo">
-          <span>🏡</span> Sneha Veed <span>🌲</span>
+    <div className="page-wrap-narrow">
+      {/* PROFILE HERO */}
+      <div className="profile-hero fade-up">
+        <div className="profile-avatar">
+          {photos[0] ? (
+            <img src={photos[0].url} alt={profile.name} />
+          ) : '👤'}
         </div>
-      </header>
-
-      <main>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 className="title" style={{ fontSize: '3.5rem' }}>{profile.call_name}</h1>
-          <p className="subtitle" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>{profile.name}</p>
-          <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', fontStyle: 'italic' }}>
-            "{profile.description}"
-          </p>
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem' }}>
-            {tags.map(tag => (
-              <span key={tag} className={`tag ${tag.includes('Hated') ? 'negative' : ''}`}>
-                {tag}
-              </span>
-            ))}
-          </div>
-          
-          <Uploader profileId={id} />
+        <h1 className="profile-call-name">{profile.call_name}</h1>
+        <p className="profile-real-name">aka {profile.name}</p>
+        <p className="profile-bio">"{profile.description}"</p>
+        <div className="profile-tags">
+          {tags.map(t => <TagBadge key={t.label} tag={t} />)}
         </div>
+      </div>
 
-        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-          Embarrassing Collection ({photos.length})
-        </h3>
-
-        {photos.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)' }}>
-            <span style={{ fontSize: '4rem' }}>📸</span>
-            <p className="subtitle" style={{ marginTop: '1rem' }}>No photos yet. Be the first to expose them!</p>
+      {/* STATS */}
+      <div className="stats-strip fade-up delay-1">
+        <div className="stat-block">
+          <div className="stat-num">{stats.totalPhotos}</div>
+          <div className="stat-label">📸 Photos</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-num" style={{ color: 'var(--green)' }}>{stats.totalLikes}</div>
+          <div className="stat-label">👍 Likes</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-num" style={{ color: 'var(--red)' }}>{stats.totalDislikes}</div>
+          <div className="stat-label">👎 Dislikes</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-num" style={{ color: 'var(--sun)' }}>{stats.totalRoasts}</div>
+          <div className="stat-label">🔥 Roasts</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-num" style={{ color: stats.vibeScore >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            {stats.vibeScore >= 0 ? '+' : ''}{stats.vibeScore}
           </div>
-        )}
+          <div className="stat-label">⚡ Vibe Score</div>
+        </div>
+      </div>
 
-        <div className="masonry-grid">
-          {photos.map((photo, i) => (
-            <div key={photo.id} className={`card masonry-item stagger-${(i % 3) + 1}`}>
-              <img src={photo.url} alt="Photo" className="masonry-img" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} />
-              <div style={{ padding: '1rem' }}>
-                <PhotoActions 
-                  photoId={photo.id} 
-                  profileId={id} 
-                  likes={photo.likes} 
-                  dislikes={photo.dislikes} 
+      {/* VIBE METER */}
+      <div className="vibe-meter fade-up delay-2">
+        <div className="vibe-label">
+          <span>💀 Roasted</span>
+          <span>{vibeEmoji} Vibe: {vibePercent}% positive</span>
+          <span>😇 Beloved</span>
+        </div>
+        <div className="vibe-track">
+          <div className="vibe-fill" style={{ width: `${vibePercent}%` }} />
+        </div>
+      </div>
+
+      {/* UPLOADER */}
+      <div className="fade-up delay-2">
+        <Uploader profileId={id} />
+      </div>
+
+      <div className="divider" />
+
+      {/* PHOTO GALLERY */}
+      <div className="section-header fade-up delay-3">
+        <h2 className="section-title">Evidence Gallery 📁</h2>
+        <span className="section-sub">{photos.length} pieces of evidence</span>
+      </div>
+
+      {photos.length === 0 ? (
+        <div className="empty fade-up delay-3">
+          <div className="empty-emoji">📂</div>
+          <div className="empty-title">No photos yet</div>
+          <div className="empty-sub">Be the first to expose {profile.call_name}. You know you want to. 😈</div>
+        </div>
+      ) : (
+        <div className="masonry fade-up delay-3">
+          {photos.map((photo) => (
+            <div key={photo.id} className="masonry-item">
+              <div className="photo-card">
+                <img
+                  src={photo.url}
+                  alt="Evidence"
+                  style={{ width: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                <PhotoActions
+                  photoId={photo.id}
+                  profileId={id}
+                  likes={photo.likes}
+                  dislikes={photo.dislikes}
+                  roasts={photo.roasts || 0}
                 />
               </div>
             </div>
           ))}
         </div>
-      </main>
+      )}
     </div>
   );
 }

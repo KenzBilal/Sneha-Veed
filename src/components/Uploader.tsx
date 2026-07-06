@@ -2,104 +2,68 @@
 
 import { useState, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
-import { uploadPhoto, likePhoto, dislikePhoto } from '@/app/actions';
-import { Camera, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import { uploadPhoto } from '@/app/actions';
 
-export function Uploader({ profileId }: { profileId: string }) {
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export default function Uploader({ profileId }: { profileId: string }) {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert("Only images are allowed. No videos!");
+      alert('❌ Only images! No videos here bestie.');
       return;
     }
 
     try {
-      setIsUploading(true);
-      
-      // Convert to WebP via compression options
-      const options = {
+      setUploading(true);
+      setProgress('Converting to WebP...');
+
+      const compressed = await imageCompression(file, {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        fileType: 'image/webp'
-      };
-      
-      const compressedFile = await imageCompression(file, options);
-      
-      const formData = new FormData();
-      formData.append('profileId', profileId);
-      formData.append('file', compressedFile, compressedFile.name.replace(/\.[^/.]+$/, "") + ".webp");
-      
-      await uploadPhoto(formData);
-      
-      // Reset input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Upload failed.");
+        fileType: 'image/webp',
+        onProgress: (p) => setProgress(`Converting... ${p}%`),
+      });
+
+      setProgress('Uploading...');
+
+      const fd = new FormData();
+      fd.append('profileId', profileId);
+      fd.append('file', compressed, compressed.name.replace(/\.[^/.]+$/, '') + '.webp');
+
+      await uploadPhoto(fd);
+      setProgress('');
+      if (ref.current) ref.current.value = '';
+    } catch (err: any) {
+      alert('Upload failed: ' + err.message);
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
   return (
-    <div style={{ marginTop: '2rem', marginBottom: '2rem', textAlign: 'center' }}>
-      <input 
-        type="file" 
-        accept="image/*" 
-        style={{ display: 'none' }} 
-        ref={fileInputRef}
-        onChange={handleUpload}
-      />
-      <button 
-        className="btn-primary" 
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
+    <div style={{ marginTop: '1.5rem' }}>
+      <input type="file" accept="image/*" ref={ref} onChange={handle} style={{ display: 'none' }} />
+      <div
+        className="upload-zone"
+        onClick={() => !uploading && ref.current?.click()}
+        style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}
       >
-        {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
-        {isUploading ? 'Uploading & Converting...' : 'Upload Embarrassing Pic'}
-      </button>
-    </div>
-  );
-}
-
-export function PhotoActions({ photoId, profileId, likes, dislikes }: { photoId: string, profileId: string, likes: number, dislikes: number }) {
-  const [isLiking, setIsLiking] = useState(false);
-  const [isDisliking, setIsDisliking] = useState(false);
-
-  return (
-    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-      <button 
-        className="btn-secondary" 
-        style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '4px', alignItems: 'center' }}
-        onClick={async () => {
-          setIsLiking(true);
-          await likePhoto(photoId, profileId);
-          setIsLiking(false);
-        }}
-        disabled={isLiking}
-      >
-        <ThumbsUp size={16} /> {likes}
-      </button>
-      <button 
-        className="btn-secondary" 
-        style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '4px', alignItems: 'center' }}
-        onClick={async () => {
-          setIsDisliking(true);
-          await dislikePhoto(photoId, profileId);
-          setIsDisliking(false);
-        }}
-        disabled={isDisliking}
-      >
-        <ThumbsDown size={16} /> {dislikes}
-      </button>
+        <div style={{ fontSize: '2rem', marginBottom: '.5rem' }}>
+          {uploading ? '⏳' : '📸'}
+        </div>
+        <div style={{ fontWeight: 700, color: 'var(--green-dark)', marginBottom: '.25rem' }}>
+          {uploading ? progress || 'Working...' : 'Drop or click to expose them'}
+        </div>
+        <div style={{ fontSize: '.8rem', color: 'var(--text-3)' }}>
+          Any image format • Auto-converted to WebP • No videos 🚫
+        </div>
+      </div>
     </div>
   );
 }
