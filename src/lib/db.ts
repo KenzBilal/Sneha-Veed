@@ -12,6 +12,7 @@ export interface Profile {
   name: string;
   call_name: string;
   description: string;
+  profile_pic?: string | null;
 }
 
 export interface Photo {
@@ -53,6 +54,10 @@ export async function getProfile(id: string): Promise<Profile | undefined> {
 
 export async function createProfile(profile: Omit<Profile, 'id'> & { id: string }) {
   return await supabase.from('profiles').insert(profile);
+}
+
+export async function deleteProfile(id: string) {
+  return await supabase.from('profiles').delete().eq('id', id);
 }
 
 export async function getPhotosByProfile(profileId: string): Promise<Photo[]> {

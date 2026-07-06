@@ -90,7 +90,7 @@ export default async function HomePage() {
           {await Promise.all(profiles.map(async (profile, i) => {
             const tags   = await calculateTags(profile.id);
             const photos = await getPhotosByProfile(profile.id);
-            const cover  = photos[0]?.url || null;
+            const cover  = profile.profile_pic || photos[0]?.url || null;
             const totalL = photos.reduce((a, p) => a + p.likes, 0);
             const totalD = photos.reduce((a, p) => a + p.dislikes, 0);
 

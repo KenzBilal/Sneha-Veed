@@ -33,7 +33,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       {/* PROFILE HERO */}
       <div className="profile-hero fade-up">
         <div className="profile-avatar">
-          {photos[0] ? (
+          {profile.profile_pic ? (
+            <img src={profile.profile_pic} alt={profile.name} />
+          ) : photos[0] ? (
             <img src={photos[0].url} alt={profile.name} />
           ) : '👤'}
         </div>
