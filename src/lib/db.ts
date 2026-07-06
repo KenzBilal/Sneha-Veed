@@ -130,6 +130,7 @@ export async function getProfileStats(profileId: string): Promise<ProfileStats> 
 export async function calculateTags(profileId: string): Promise<Tag[]> {
   const allPhotos = await getAllPhotos();
   const profiles = await getProfiles();
+  const { data: battleResults } = await supabase.from('battle_results').select('*');
 
   // Aggregate per profile
   const counts: Record<string, number>  = {};
@@ -194,7 +195,51 @@ export async function calculateTags(profileId: string): Promise<Tag[]> {
   if (tags.length === 0)
     tags.push({ emoji: '😶', label: 'Just Vibing', color: 'gray' });
 
-  return tags;
+  // Battle Tags Logic
+  if (battleResults && battleResults.length > 0) {
+    const wins: Record<string, number> = {};
+    const losses: Record<string, number> = {};
+    const qWins: Record<string, Record<string, number>> = {}; // q_id -> profile_id -> wins
+
+    for (const r of battleResults) {
+      wins[r.winner_id] = (wins[r.winner_id] || 0) + 1;
+      losses[r.loser_id] = (losses[r.loser_id] || 0) + 1;
+      
+      if (!qWins[r.question_id]) qWins[r.question_id] = {};
+      qWins[r.question_id][r.winner_id] = (qWins[r.question_id][r.winner_id] || 0) + 1;
+    }
+
+    const myWins = wins[profileId] || 0;
+    const myLosses = losses[profileId] || 0;
+    
+    // Overall Gladiator / Punching Bag
+    const maxWins = Math.max(...Object.values(wins), 0);
+    const maxLosses = Math.max(...Object.values(losses), 0);
+
+    if (myWins === maxWins && maxWins > 0) tags.unshift({ emoji: '🥊', label: 'Gladiator', color: 'red' });
+    if (myLosses === maxLosses && maxLosses > 0 && myLosses > myWins) tags.push({ emoji: '🤕', label: 'Punching Bag', color: 'gray' });
+
+    // Specific Question Tags
+    const checkWin = (qid: string, emoji: string, label: string, color: Tag['color']) => {
+      const q = qWins[qid];
+      if (!q) return;
+      const mQ = q[profileId] || 0;
+      const mMax = Math.max(...Object.values(q), 0);
+      if (mQ === mMax && mMax > 0) tags.push({ emoji, label, color });
+    };
+
+    checkWin('q_fashion', '👔', 'Fashion Icon', 'wood');
+    checkWin('q_broke', '💸', 'Broke', 'red');
+    checkWin('q_jail', '🚓', 'Public Enemy', 'gray');
+    checkWin('q_survive', '🧟‍♂️', 'Survivor', 'green');
+    checkWin('q_smart', '🧠', 'Big Brain', 'sun');
+    checkWin('q_funny', '😂', 'Joker', 'sun');
+    checkWin('q_secret', '🥷', 'Secretive', 'gray');
+  }
+
+  // Deduplicate and trim tags (keep max 6)
+  const uniqueTags = tags.filter((t, i, a) => a.findIndex(x => x.label === t.label) === i);
+  return uniqueTags.slice(0, 6);
 }
 
 // =================== HALL QUERIES ===================
@@ -300,3 +345,33 @@ export async function deleteCampaign(id: string) {
 export async function toggleCampaignActive(id: string, active: boolean) {
   return await supabase.from('campaigns').update({ active }).eq('id', id);
 }
+
+// =================== 1v1 BATTLES ===================
+
+export interface BattleQuestion {
+  id: string;
+  text: string;
+  emoji: string;
+}
+
+export interface BattleResult {
+  id: string;
+  question_id: string;
+  winner_id: string;
+  loser_id: string;
+  created_at: string;
+}
+
+export async function getBattleQuestions(): Promise<BattleQuestion[]> {
+  const { data } = await supabase.from('battle_questions').select('*');
+  return data || [];
+}
+
+export async function recordBattleResult(questionId: string, winnerId: string, loserId: string) {
+  return await supabase.from('battle_results').insert({
+    question_id: questionId,
+    winner_id: winnerId,
+    loser_id: loserId,
+  });
+}
+
