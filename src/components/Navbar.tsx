@@ -7,7 +7,7 @@ const LINKS = [
   { href: '/',               label: '🏠 Home' },
   { href: '/feed',           label: '📰 Feed' },
   { href: '/world-cup',      label: '⚽ World Cup' },
-  { href: '/battles',        label: '⚔️ Battles' },
+  { href: '/battles',        label: '⚔️ 1v1' },
   { href: '/leaderboard',    label: '🏆 Leaderboard' },
   { href: '/hall-of-fame',   label: '✨ Hall of Fame' },
   { href: '/hall-of-shame',  label: '😈 Hall of Shame' },

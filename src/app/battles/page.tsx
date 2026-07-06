@@ -2,7 +2,7 @@ import { getProfiles, getBattleQuestions, getPhotosByProfile } from '@/lib/db';
 import BattleArena from './BattleArena';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '⚔️ Battles | Sneha Veed' };
+export const metadata = { title: '⚔️ 1v1 | Sneha Veed' };
 
 export default async function BattlesPage() {
   const [profiles, questions] = await Promise.all([
@@ -21,7 +21,7 @@ export default async function BattlesPage() {
   return (
     <div className="page-wrap" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '2.5rem 0 1rem', textAlign: 'center' }} className="fade-up">
-        <div className="page-title" style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>⚔️ 1v1 Arena</div>
+        <div className="page-title" style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>⚔️ 1v1</div>
         <p style={{ color: 'var(--text-2)', maxWidth: 500, margin: '0 auto' }}>
           Who is better? Pick a winner. The loser gets swapped out. Wins and losses permanently affect profile tags!
         </p>
