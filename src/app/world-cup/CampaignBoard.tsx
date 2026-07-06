@@ -164,7 +164,7 @@ function PersonChip({
           ? <img src={profile.profile_pic} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} alt="" />
           : <span style={{ fontSize: '.9rem' }}>👤</span>
         }
-        {profile.call_name}
+        {profile.name}
         {loading && <span style={{ fontSize: '.7rem' }}>⏳</span>}
         {active && !loading && <span style={{ fontSize: '.65rem', opacity: .6 }}>▾</span>}
       </button>
@@ -180,7 +180,7 @@ function PersonChip({
             minWidth: 180, overflow: 'hidden',
           }}>
             <div style={{ padding: '.5rem .75rem', fontSize: '.72rem', fontWeight: 700, color: 'var(--text-3)', borderBottom: '1px solid var(--border)' }}>
-              Assign {profile.call_name} to:
+              Assign {profile.name} to:
             </div>
             {options.map(opt => (
               <button
