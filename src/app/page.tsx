@@ -139,8 +139,8 @@ export default async function HomePage() {
                     src={cover}
                     alt={profile.call_name}
                     style={{
-                      width: '100%', height: 'auto', display: 'block',
-                      maxHeight: '400px', objectFit: 'contain', background: '#000'
+                      width: '100%', aspectRatio: '4/5', display: 'block',
+                      objectFit: 'cover', background: 'var(--surface-3)'
                     }}
                   />
                 ) : (

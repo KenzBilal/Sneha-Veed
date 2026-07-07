@@ -7,8 +7,9 @@ const LINKS = [
   { href: '/',               label: '🏠', full: 'Home' },
   { href: '/feed',           label: '📰', full: 'Feed' },
   { href: '/world-cup',      label: '⚽', full: 'World Cup' },
-  { href: '/battles',        label: '⚔️', full: '1v1 Battles' },
+  { href: '/battles',        label: '⚔️', full: '1v1 Arena' },
   { href: '/leaderboard',    label: '🏆', full: 'Leaderboard' },
+  { href: '/lounge',         label: '🎙️', full: 'Lounge' },
   { href: '/hall-of-fame',   label: '✨', full: 'Hall of Fame' },
   { href: '/hall-of-shame',  label: '😈', full: 'Hall of Shame' },
 ];
