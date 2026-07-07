@@ -12,12 +12,28 @@ const ROAST_QUOTES = [
   '"The camera adds 10 pounds. Our group adds 100 roasts." — Ancient Proverb',
   '"The best mirror is an old friend with a phone." — George Herbert',
   '"Friends buy you food. Best friends upload your worst photos." — Unknown Legend',
+  '"True friendship is silently agreeing not to post the photo where you both look bad." — Albert Einstein',
+  '"If you can\'t handle me at my worst angle, you don\'t deserve me at my filtered best." — Marilyn Monroe',
+  '"A picture is worth a thousand words, and 999 of them are roasts." — Shakespeare',
+  '"Keep your friends close, and your phone closer." — The Godfather',
+  '"What happens in the group chat, eventually gets uploaded here." — Modern Proverb',
+  '"I smile because you are my friends. I laugh because there is nothing you can do about these photos." — The Joker',
+  '"Some memories are meant to be cherished. Others are meant to be weaponized." — Art of War, Chapter 14',
+  '"A true friend stabs you in the front... with a camera flash." — Oscar Wilde',
+  '"There is no delete button in real life, and definitely not on this website." — Steve Jobs',
+  '"You either die a hero, or live long enough to see yourself become a meme." — Harvey Dent',
+  '"Trust no one. Especially the friend holding the camera." — Fox Mulder',
+  '"It takes years to build a reputation and one badly timed photo to ruin it." — Warren Buffett',
+  '"To err is human; to upload it is divine." — Alexander Pope',
+  '"May your Wi-Fi be strong and your angles be flattering. (Spoiler: They aren\'t)" — Ancient Blessing',
 ];
 
 export default async function HomePage() {
   const profiles = await getProfiles();
   const allPhotos = await getAllPhotos();
-  const quoteIdx = Math.floor(Date.now() / 86400000) % ROAST_QUOTES.length;
+  
+  // Random quote on every refresh (since dynamic = force-dynamic)
+  const quoteIdx = Math.floor(Math.random() * ROAST_QUOTES.length);
   const quote = ROAST_QUOTES[quoteIdx];
 
   const totalPhotos = allPhotos.length;
