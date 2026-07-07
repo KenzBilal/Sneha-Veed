@@ -40,6 +40,24 @@ export default async function HomePage() {
   const totalLikes  = allPhotos.reduce((a, p) => a + p.likes, 0);
   const totalRoasts = allPhotos.reduce((a, p) => a + (p.roasts || 0), 0);
 
+  // 1) Fetch enriched data for all profiles
+  const profilesData = await Promise.all(profiles.map(async (profile) => {
+    const tags   = await calculateTags(profile.id);
+    const photos = await getPhotosByProfile(profile.id);
+    const cover  = profile.profile_pic || photos[0]?.url || null;
+    const totalL = photos.reduce((a, p) => a + p.likes, 0);
+    const totalD = photos.reduce((a, p) => a + p.dislikes, 0);
+    return { profile, tags, photos, cover, totalL, totalD, photoCount: photos.length };
+  }));
+
+  // 2) Sort: Profiles with photos first, then by photo count (desc), then alphabetical
+  profilesData.sort((a, b) => {
+    if (a.photoCount > 0 && b.photoCount === 0) return -1;
+    if (a.photoCount === 0 && b.photoCount > 0) return 1;
+    if (a.photoCount !== b.photoCount) return b.photoCount - a.photoCount;
+    return a.profile.name.localeCompare(b.profile.name);
+  });
+
   return (
     <div className="page-wrap">
       {/* HERO */}
@@ -95,7 +113,7 @@ export default async function HomePage() {
         <span className="section-sub">{profiles.length} members</span>
       </div>
 
-      {profiles.length === 0 ? (
+      {profilesData.length === 0 ? (
         <div className="empty">
           <div className="empty-emoji">👀</div>
           <div className="empty-title">No one here yet</div>
@@ -103,76 +121,68 @@ export default async function HomePage() {
         </div>
       ) : (
         <div className="friend-grid">
-          {await Promise.all(profiles.map(async (profile, i) => {
-            const tags   = await calculateTags(profile.id);
-            const photos = await getPhotosByProfile(profile.id);
-            const cover  = profile.profile_pic || photos[0]?.url || null;
-            const totalL = photos.reduce((a, p) => a + p.likes, 0);
-            const totalD = photos.reduce((a, p) => a + p.dislikes, 0);
+          {profilesData.map(({ profile, tags, photos, cover, totalL, totalD }, i) => (
+            <Link
+              href={`/profile/${profile.id}`}
+              key={profile.id}
+              className={`card fade-up delay-${Math.min(i + 1, 6)}`}
+              style={{ display: 'block' }}
+            >
+              {/* Cover — full image, no cropping */}
+              <div style={{ background: 'var(--surface-2)', position: 'relative' }}>
+                {cover ? (
+                  <img
+                    src={cover}
+                    alt={profile.call_name}
+                    style={{
+                      width: '100%', height: 'auto', display: 'block',
+                      maxHeight: '400px', objectFit: 'contain', background: '#000'
+                    }}
+                  />
+                ) : (
+                  <div style={{ padding: '3rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
+                    👤
+                  </div>
+                )}
 
-            return (
-              <Link
-                href={`/profile/${profile.id}`}
-                key={profile.id}
-                className={`card fade-up delay-${Math.min(i + 1, 6)}`}
-                style={{ display: 'block' }}
-              >
-                {/* Cover — full image, no cropping */}
-                <div style={{ background: 'var(--surface-2)', position: 'relative' }}>
-                  {cover ? (
-                    <img
-                      src={cover}
-                      alt={profile.call_name}
-                      style={{
-                        width: '100%', height: 'auto', display: 'block',
-                        maxHeight: '400px', objectFit: 'contain', background: '#000'
-                      }}
-                    />
-                  ) : (
-                    <div style={{ padding: '3rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
-                      👤
-                    </div>
-                  )}
+                {/* Gradient scrim at bottom */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
+                  background: 'linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%)',
+                  pointerEvents: 'none',
+                }} />
 
-                  {/* Gradient scrim at bottom */}
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
-                    background: 'linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%)',
-                    pointerEvents: 'none',
-                  }} />
-
-                  {/* Name overlay on image */}
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    padding: '.75rem 1rem',
-                  }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', textShadow: '0 1px 6px rgba(0,0,0,.6)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                      {profile.call_name}
-                    </div>
-                    <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.7)', fontWeight: 600, marginTop: '.1rem' }}>
-                      aka {profile.name}
-                    </div>
+                {/* Name overlay on image */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '.75rem 1rem',
+                }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', textShadow: '0 1px 6px rgba(0,0,0,.6)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                    {profile.call_name}
+                  </div>
+                  <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.7)', fontWeight: 600, marginTop: '.1rem' }}>
+                    aka {profile.name}
                   </div>
                 </div>
+              </div>
 
-                <div className="card-body" style={{ padding: '.85rem 1rem' }}>
-                  {/* Mini stats */}
-                  <div className="flex gap-1" style={{ marginBottom: '.7rem', fontSize: '.8rem', color: 'var(--text-2)', fontWeight: 600 }}>
-                    <span>📸 {photos.length}</span>
-                    <span>·</span>
-                    <span>👍 {totalL}</span>
-                    <span>·</span>
-                    <span>👎 {totalD}</span>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1">
-                    {tags.slice(0, 2).map(tag => <TagBadge key={tag.label} tag={tag} />)}
-                  </div>
+              <div className="card-body" style={{ padding: '.85rem 1rem' }}>
+                {/* Mini stats */}
+                <div className="flex gap-1" style={{ marginBottom: '.7rem', fontSize: '.8rem', color: 'var(--text-2)', fontWeight: 600 }}>
+                  <span>📸 {photos.length}</span>
+                  <span>·</span>
+                  <span>👍 {totalL}</span>
+                  <span>·</span>
+                  <span>👎 {totalD}</span>
                 </div>
-              </Link>
-            );
-          }))}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1">
+                  {tags.slice(0, 2).map(tag => <TagBadge key={tag.label} tag={tag} />)}
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>
