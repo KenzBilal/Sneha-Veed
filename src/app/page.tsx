@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getProfiles, calculateTags, getPhotosByProfile, getAllPhotos } from '@/lib/db';
 import TagBadge from '@/components/TagBadge';
+import AddMemberModal from '@/components/AddMemberModal';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Home | Sneha Veed 🏡' };
@@ -108,9 +109,12 @@ export default async function HomePage() {
       </div>
 
       {/* FRIENDS GRID */}
-      <div className="section-header">
-        <h2 className="section-title">The Squad 👥</h2>
-        <span className="section-sub">{profiles.length} members</span>
+      <div className="section-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h2 className="section-title">The Squad 👥</h2>
+          <span className="section-sub">{profiles.length} members</span>
+        </div>
+        <AddMemberModal />
       </div>
 
       {profilesData.length === 0 ? (

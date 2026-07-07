@@ -27,6 +27,12 @@ export async function uploadPhoto(formData: FormData) {
 
   await createPhoto({ id: crypto.randomUUID(), profile_id: profileId, url: publicUrl });
 
+  // Auto-set profile pic if they don't have one
+  const { data: profileInfo } = await supabase.from('profiles').select('profile_pic').eq('id', profileId).single();
+  if (profileInfo && !profileInfo.profile_pic) {
+    await supabase.from('profiles').update({ profile_pic: publicUrl }).eq('id', profileId);
+  }
+
   revalidatePath('/');
   revalidatePath('/feed');
   revalidatePath(`/profile/${profileId}`);
@@ -82,4 +88,22 @@ export async function updateProfileDetails(id: string, name: string, callName: s
   revalidatePath(`/profile/${id}`);
   revalidatePath('/leaderboard');
   revalidatePath('/battles');
+}
+
+export async function publicCreateProfile(formData: FormData) {
+  const name = (formData.get('name') as string).trim();
+  const call_name = (formData.get('call_name') as string).trim();
+  const description = (formData.get('description') as string).trim();
+  
+  if (!name || !call_name) throw new Error('Name and Call Name are required');
+  
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from('profiles').insert({
+    id, name, call_name, description
+  });
+  
+  if (error) throw new Error(error.message);
+  
+  revalidatePath('/');
+  return id;
 }
