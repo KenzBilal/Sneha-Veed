@@ -11,7 +11,7 @@ async function compressToWebp(file: File, onProgress?: (p: number) => void): Pro
   return imageCompression(file, {
     maxSizeMB: 3,
     maxWidthOrHeight: 2048,
-    useWebWorker: true,
+    useWebWorker: false,
     fileType: 'image/webp',
     onProgress,
   });

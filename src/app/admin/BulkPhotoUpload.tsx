@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useTransition } from 'react';
+import { useState, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
 import { adminAddPhoto } from './actions';
 import type { Profile } from '@/lib/db';
@@ -18,7 +18,6 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pending, startTransition] = useTransition();
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -60,9 +59,9 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
         // 1. Compress
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'compressing' } : x));
         const compressedFile = await imageCompression(item.file, {
-          maxSizeMB: 1.5,
+          maxSizeMB: 0.8,
           maxWidthOrHeight: 1600,
-          useWebWorker: true,
+          useWebWorker: false,
           fileType: 'image/webp'
         });
 
@@ -73,11 +72,7 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
         fd.set('profileId', item.profileId);
         fd.set('file', new File([compressedFile], 'photo.webp', { type: 'image/webp' }));
 
-        await new Promise<void>((resolve, reject) => {
-          startTransition(() => {
-            adminAddPhoto(fd).then(resolve).catch(reject);
-          });
-        });
+        await adminAddPhoto(fd);
 
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'done' } : x));
       } catch (err: any) {

@@ -25,7 +25,7 @@ export default function Uploader({ profileId }: { profileId: string }) {
       const compressed = await imageCompression(file, {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
-        useWebWorker: true,
+        useWebWorker: false,
         fileType: 'image/webp',
         onProgress: (p) => setProgress(`Converting... ${p}%`),
       });
