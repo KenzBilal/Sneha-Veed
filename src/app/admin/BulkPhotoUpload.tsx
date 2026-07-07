@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import imageCompression from 'browser-image-compression';
+
 import { adminAddPhoto } from './actions';
 import type { Profile } from '@/lib/db';
 
@@ -56,22 +56,13 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
 
       let step = 'Compression';
       try {
-        // 1. Compress
-        setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'compressing' } : x));
-        const compressedFile = await imageCompression(item.file, {
-          maxSizeMB: 0.8,
-          maxWidthOrHeight: 1600,
-          useWebWorker: false,
-          fileType: 'image/webp'
-        });
-
-        // 2. Upload
+        // Upload directly without client compression
         step = 'Upload';
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'uploading' } : x));
         
         const fd = new FormData();
         fd.set('profileId', item.profileId);
-        fd.set('file', new File([compressedFile], 'photo.webp', { type: 'image/webp' }));
+        fd.set('file', item.file);
 
         await adminAddPhoto(fd);
 
