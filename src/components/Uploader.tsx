@@ -60,8 +60,8 @@ export default function Uploader({ profileId }: { profileId: string }) {
         <div style={{ fontWeight: 700, color: 'var(--green-dark)', marginBottom: '.25rem' }}>
           {uploading ? progress || 'Working...' : 'Drop or click to expose them'}
         </div>
-        <div style={{ fontSize: '.8rem', color: 'var(--text-3)' }}>
-          Any image format • Auto-converted to WebP • No videos 🚫
+        <div style={{ fontSize: '.8rem', color: 'var(--text-3)', fontWeight: 600 }}>
+          only images expose them
         </div>
       </div>
     </div>
