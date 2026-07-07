@@ -56,13 +56,57 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
 
       let step = 'Compression';
       try {
-        // Upload directly without client compression
+        setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'compressing' } : x));
+        
+        // Native WebP Converter
+        const compressedFile = await new Promise<Blob>((resolve, reject) => {
+          const img = new Image();
+          const url = URL.createObjectURL(item.file);
+          
+          img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            
+            // Max size 1920x1920 to prevent memory crashes on huge images
+            let width = img.width;
+            let height = img.height;
+            const max = 1920;
+            if (width > max || height > max) {
+              if (width > height) { height = Math.round((height * max) / width); width = max; }
+              else { width = Math.round((width * max) / height); height = max; }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject(new Error('Failed to get canvas context'));
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob(
+              (blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('Canvas toBlob failed'));
+              },
+              'image/webp',
+              0.8
+            );
+          };
+          
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load image. Ensure it is a valid image file.'));
+          };
+          
+          img.src = url;
+        });
+
+        // 2. Upload
         step = 'Upload';
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'uploading' } : x));
         
         const fd = new FormData();
         fd.set('profileId', item.profileId);
-        fd.set('file', item.file);
+        fd.set('file', new File([compressedFile], 'photo.webp', { type: 'image/webp' }));
 
         await adminAddPhoto(fd);
 
