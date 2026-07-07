@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getProfile, getPhotosByProfile, calculateTags, getProfileStats } from '@/lib/db';
 import Uploader from '@/components/Uploader';
 import PhotoActions from '@/components/PhotoActions';
+import EditableCallName from '@/components/EditableCallName';
 import TagBadge from '@/components/TagBadge';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +40,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <img src={photos[0].url} alt={profile.name} />
           ) : '👤'}
         </div>
-        <h1 className="profile-call-name">{profile.call_name}</h1>
+        
+        <EditableCallName profileId={id} initialName={profile.call_name} />
+        
         <p className="profile-real-name">aka {profile.name}</p>
         <p className="profile-bio">"{profile.description}"</p>
         <div className="profile-tags">

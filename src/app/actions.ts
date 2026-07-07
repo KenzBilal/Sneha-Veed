@@ -107,3 +107,12 @@ export async function publicCreateProfile(formData: FormData) {
   revalidatePath('/');
   return id;
 }
+
+export async function updatePublicCallName(id: string, callName: string) {
+  const { error } = await supabase.from('profiles').update({ call_name: callName }).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/');
+  revalidatePath(`/profile/${id}`);
+  revalidatePath('/leaderboard');
+  revalidatePath('/battles');
+}
