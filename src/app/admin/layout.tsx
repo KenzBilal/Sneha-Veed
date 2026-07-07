@@ -11,7 +11,16 @@ async function isLocal(): Promise<boolean> {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  if (!(await isLocal())) return notFound();
+  if (!(await isLocal())) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', textAlign: 'center', background: 'var(--surface)' }}>
+        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⛔</div>
+        <h1 style={{ fontSize: '2rem', fontWeight: 900 }}>Access Denied</h1>
+        <p style={{ color: 'var(--text-2)' }}>The Admin dashboard is strictly limited to localhost access.</p>
+        <Link href="/" className="btn btn-green" style={{ marginTop: '2rem' }}>Return Home</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-layout">
