@@ -19,15 +19,15 @@ export default function BattleArena({ profiles, questions }: Props) {
   const [animating, setAnimating] = useState<'left' | 'right' | null>(null);
   const [pending, startTransition] = useTransition();
 
-  // Initialize random profiles and question
+  // Initialize random profiles and question only on first load
   useEffect(() => {
-    if (profiles.length >= 2) {
+    if (profiles.length >= 2 && !p1 && !p2 && !q) {
       const shuffled = [...profiles].sort(() => Math.random() - 0.5);
       setP1(shuffled[0]);
       setP2(shuffled[1]);
       setQ(questions[Math.floor(Math.random() * questions.length)]);
     }
-  }, [profiles, questions]);
+  }, [profiles, questions, p1, p2, q]);
 
   const handleVote = (winner: 'p1' | 'p2', e: React.MouseEvent) => {
     if (!p1 || !p2 || !q || animating) return;
@@ -138,24 +138,12 @@ function FighterCard({ profile, align }: { profile: ProfileWithCover, align: 'le
     <div className="card hover-scale" style={{ padding: 0, overflow: 'hidden', border: '3px solid transparent', transition: 'border 0.2s', ...({
       ':hover': { borderColor: 'var(--green)' }
     } as any) }}>
-      <div style={{ aspectRatio: '3/4', background: 'var(--surface-2)', position: 'relative' }}>
+      <div style={{ background: 'var(--surface-2)', position: 'relative' }}>
         {profile.cover ? (
-          <img src={profile.cover} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={profile.cover} alt="Fighter" style={{ width: '100%', height: 'auto', maxHeight: '400px', display: 'block', objectFit: 'contain', background: '#000' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem' }}>👤</div>
+          <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem' }}>👤</div>
         )}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-          padding: '2rem 1.5rem 1.5rem', textAlign: align,
-        }}>
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-            {profile.name}
-          </div>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
-            {profile.call_name}
-          </div>
-        </div>
       </div>
     </div>
   );
