@@ -17,6 +17,28 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
+const CAPTIONS = [
+  "caught lacking in 4k 📸",
+  "didn't even try to pose 💀",
+  "explain this bro 🤨",
+  "this angles crazy 😭",
+  "delete this immediately 🔥",
+  "down bad astronomically 📉",
+  "bro is absolutely lost 🚶‍♂️",
+  "the intrusive thoughts won 🧠",
+  "moments before disaster 🌪️",
+  "what did they mean by this 🧐",
+  "respectfully, what is this 🤢",
+  "looking like a snack (left out in the sun) 🍔",
+  "we all make mistakes 🤷",
+  "the camera did you dirty (it didn't) 📸",
+  "a modern masterpiece 🖼️",
+  "this is why we can't have nice things 🚫",
+  "bro thinks he's the main character 🤡",
+  "certified hood classic 💿",
+  "sus ඞ",
+];
+
 export default async function FeedPage() {
   const photos = await getRecentPhotos(40);
 
@@ -130,7 +152,9 @@ export default async function FeedPage() {
                 <div style={{ padding: '0 1rem .875rem', fontSize: '.85rem' }}>
                   <span style={{ fontWeight: 800 }}>{profileName}</span>
                   {' '}
-                  <span style={{ color: 'var(--text-2)' }}>caught in the wild 📸</span>
+                  <span style={{ color: 'var(--text-2)' }}>
+                    {CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)]}
+                  </span>
                 </div>
               </article>
             );
