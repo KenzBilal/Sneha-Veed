@@ -31,7 +31,7 @@ export default async function HomePage() {
         <div className="hero-emoji">🏡 🌲 🌳</div>
         <h1 className="hero-title">Sneha Veed</h1>
         <p className="hero-sub">
-          The official hall of memories, embarrassments, and pure chaotic energy of our group.
+          A digital museum of our worst decisions, terrible camera angles, and highly questionable life choices.
         </p>
         <div className="hero-actions">
           <Link href="/leaderboard" className="btn btn-green">🏆 Leaderboard</Link>
