@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const LINKS = [
@@ -15,6 +15,7 @@ const LINKS = [
 
 export default function Navbar() {
   const path = usePathname();
+  const router = useRouter();
   const [isLocal, setIsLocal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -27,14 +28,32 @@ export default function Navbar() {
   useEffect(() => { setMenuOpen(false); }, [path]);
 
   const allLinks = isLocal ? [...LINKS, { href: '/admin', label: '⚙️', full: 'Admin' }] : LINKS;
+  
+  const isInnerPage = path.startsWith('/profile/') || path === '/battles';
 
   return (
     <>
       <nav className="navbar">
         <div className="navbar-inner">
-          <Link href="/" className="navbar-logo">
-            <span>🏡</span> Sneha Veed
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {isInnerPage && (
+              <button 
+                onClick={() => router.back()} 
+                className="btn-pop"
+                style={{ 
+                  background: 'var(--surface-2)', border: '1px solid var(--border)',
+                  borderRadius: 'var(--r-md)', padding: '.3rem .6rem',
+                  fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  fontWeight: 800, color: 'var(--text)'
+                }}
+              >
+                ← Back
+              </button>
+            )}
+            <Link href="/" className="navbar-logo" style={{ marginLeft: isInnerPage ? 0 : 0 }}>
+              <span>🏡</span> <span className={isInnerPage ? 'hide-mobile' : ''}>Sneha Veed</span>
+            </Link>
+          </div>
 
           {/* Desktop links */}
           <ul className="navbar-links navbar-desktop">

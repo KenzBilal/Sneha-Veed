@@ -604,6 +604,13 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--r-xl);
   color: var(--text-3);
 }
+@media (max-width: 600px) {
+  .page-wrap { padding: 1rem; }
+  .navbar-inner { padding: 0.75rem 1rem; }
+  .navbar-logo { font-size: 1.1rem; }
+  .hide-mobile { display: none; }
+  .hero-title { font-size: 3.5rem; }
+}
 @media (min-width: 640px) { .empty { padding: 4rem 2rem; } }
 .empty-emoji { font-size: 3rem; margin-bottom: .75rem; }
 .empty-title { font-size: 1.05rem; font-weight: 700; color: var(--text-2); margin-bottom: .4rem; }
