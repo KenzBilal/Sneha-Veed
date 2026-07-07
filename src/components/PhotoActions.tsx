@@ -61,41 +61,16 @@ export default function PhotoActions({ photoId, profileId, likes, dislikes, roas
   };
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div className="photo-card-actions">
-        <button className="vote-btn" onClick={() => act('like')} disabled={!!loading} title="Like">
-          👍 {l}
-        </button>
-        <button className="vote-btn dislike" onClick={() => act('dislike')} disabled={!!loading} title="Dislike">
-          👎 {d}
-        </button>
-        <button className="vote-btn roast" onClick={() => act('roast')} disabled={!!loading} title="Roast">
-          🔥 {r}
-        </button>
-        <button className="vote-btn" onClick={handleMoveClick} disabled={!!loading} title="Move Photo" style={{ marginLeft: 'auto', background: 'var(--surface-2)', color: 'var(--text)' }}>
-          🔄 Move
-        </button>
-      </div>
-
-      {showMove && (
-        <div style={{
-          position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem',
-          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
-          padding: '0.75rem', zIndex: 50, boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '220px'
-        }}>
-          <div style={{ fontSize: '.85rem', fontWeight: 800, marginBottom: '.5rem', color: 'var(--text-2)' }}>Move to:</div>
-          <select 
-            onChange={(e) => executeMove(e.target.value)}
-            value=""
-            style={{ width: '100%', padding: '.4rem', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)' }}
-          >
-            <option value="" disabled>Select profile...</option>
-            {profiles.filter(p => p.id !== profileId).map(p => (
-              <option key={p.id} value={p.id}>{p.call_name} ({p.name})</option>
-            ))}
-          </select>
-        </div>
-      )}
+    <div className="photo-card-actions">
+      <button className="vote-btn" onClick={() => act('like')} disabled={!!loading} title="Like">
+        👍 {l}
+      </button>
+      <button className="vote-btn dislike" onClick={() => act('dislike')} disabled={!!loading} title="Dislike">
+        👎 {d}
+      </button>
+      <button className="vote-btn roast" onClick={() => act('roast')} disabled={!!loading} title="Roast">
+        🔥 {r}
+      </button>
     </div>
   );
 }

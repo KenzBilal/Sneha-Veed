@@ -89,6 +89,14 @@ export async function adminUpdateProfilePic(formData: FormData) {
   if (error) throw new Error('Update failed: ' + error.message);
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath(`/profile/${profileId}`);
+}
+
+export async function getPhotosByProfileId(profileId: string) {
+  const { data } = await supabase
+    .from('photos')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('uploaded_at', { ascending: false });
+  return data || [];
 }

@@ -4,6 +4,7 @@ import { getProfiles, getPhotosByProfile, getCampaignOptions } from '@/lib/db';
 import { CreateProfileForm, ProfilesTable, UpdateProfilePicForm } from './AdminClient';
 import { WorldCupEliminationBoard } from './WorldCupAdminControls';
 import { BulkPhotoUpload } from './BulkPhotoUpload';
+import { AdminPhotoManager } from './AdminPhotoManager';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '⚙️ Admin | Sneha Veed' };
@@ -142,7 +143,8 @@ export default async function AdminPage() {
           </div>
         </div>
 
-
+        {/* ADMIN PHOTO MANAGER */}
+        <AdminPhotoManager profiles={profiles} />
 
         {/* WORLD CUP CONTROLS */}
         <div className="card fade-up delay-4" style={{ marginTop: '2rem' }}>
