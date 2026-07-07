@@ -55,29 +55,35 @@ export default function CampaignBoard({ campaignId, profiles, options, initialVo
   const assigned = profiles.length - unassigned.length;
   
   const activeOptions = options.filter(o => !o.eliminated);
-  const eliminatedOptions = options.filter(o => o.eliminated);
   
+  const getCount = (id: string) => (grouped[id] || []).length;
+  const sortedOptions = [...options].sort((a, b) => {
+    const aCount = getCount(a.id);
+    const bCount = getCount(b.id);
+    
+    const aActive = !a.eliminated && aCount > 0;
+    const bActive = !b.eliminated && bCount > 0;
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+    
+    const aElim = a.eliminated && aCount > 0;
+    const bElim = b.eliminated && bCount > 0;
+    if (aElim && !bElim) return -1;
+    if (!aElim && bElim) return 1;
+    
+    if (bCount !== aCount) return bCount - aCount;
+    if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1;
+    return 0;
+  });
+
   useEffect(() => {
-    // If exactly 1 team remains active (and total options was > 1), trigger confetti!
     if (activeOptions.length === 1 && options.length > 1) {
       const duration = 3000;
       const end = Date.now() + duration;
 
       const frame = () => {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: [activeOptions[0].color, '#ffffff']
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: [activeOptions[0].color, '#ffffff']
-        });
+        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: [activeOptions[0].color, '#ffffff'] });
+        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: [activeOptions[0].color, '#ffffff'] });
         if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();
@@ -86,7 +92,6 @@ export default function CampaignBoard({ campaignId, profiles, options, initialVo
 
   return (
     <div>
-      {/* Progress bar */}
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.8rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '.4rem' }}>
           <span>{assigned}/{profiles.length} people assigned</span>
@@ -98,13 +103,8 @@ export default function CampaignBoard({ campaignId, profiles, options, initialVo
       </div>
 
       <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-
-        {/* Unassigned pool */}
         {unassigned.length > 0 && (
-          <div style={{
-            border: '2px dashed var(--border)', borderRadius: 'var(--r-lg)',
-            padding: '1rem', background: 'var(--surface-2)',
-          }}>
+          <div style={{ border: '2px dashed var(--border)', borderRadius: 'var(--r-lg)', padding: '1rem', background: 'var(--surface-2)' }}>
             <div style={{ fontWeight: 800, fontSize: '.9rem', color: 'var(--text-3)', marginBottom: '.75rem' }}>
               👤 Not yet assigned ({unassigned.length})
             </div>
@@ -116,88 +116,41 @@ export default function CampaignBoard({ campaignId, profiles, options, initialVo
           </div>
         )}
 
-        {/* Option columns (Active) */}
-        {activeOptions.map(opt => (
-          <div
-            key={opt.id}
-            style={{
-              border: `2px solid ${opt.color}40`,
-              borderRadius: 'var(--r-lg)',
-              overflow: 'hidden',
-              background: opt.color + '08',
-              position: 'relative',
-            }}
-          >
-            {activeOptions.length === 1 && (
-              <div style={{ position: 'absolute', top: -15, right: -15, fontSize: '4rem', zIndex: 10, transform: 'rotate(15deg)' }}>🏆</div>
-            )}
-            {/* Option header */}
-            <div style={{
-              padding: '.85rem 1rem',
-              background: opt.color + '18',
-              borderBottom: `1.5px solid ${opt.color}30`,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                <span style={{ fontSize: '1.3rem' }}>{opt.emoji}</span>
-                <span style={{ fontWeight: 900, fontSize: '.95rem', color: opt.color }}>{opt.name}</span>
+        {sortedOptions.map(opt => {
+          if (!opt.eliminated) {
+            return (
+              <div key={opt.id} style={{ border: `2px solid ${opt.color}40`, borderRadius: 'var(--r-lg)', overflow: 'hidden', background: opt.color + '08', position: 'relative' }}>
+                {activeOptions.length === 1 && <div style={{ position: 'absolute', top: -15, right: -15, fontSize: '4rem', zIndex: 10, transform: 'rotate(15deg)' }}>🏆</div>}
+                <div style={{ padding: '.85rem 1rem', background: opt.color + '18', borderBottom: `1.5px solid ${opt.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                    <span style={{ fontSize: '1.3rem' }}>{opt.emoji}</span>
+                    <span style={{ fontWeight: 900, fontSize: '.95rem', color: opt.color }}>{opt.name}</span>
+                  </div>
+                  <span style={{ background: opt.color, color: 'white', borderRadius: 99, padding: '.15rem .6rem', fontSize: '.75rem', fontWeight: 800 }}>{(grouped[opt.id] || []).length}</span>
+                </div>
+                <div style={{ padding: '.75rem', minHeight: 80, display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignContent: 'flex-start' }}>
+                  {(grouped[opt.id] || []).map(p => <PersonChip key={p.id} profile={p} options={options} currentOptionId={opt.id} onAssign={assign} active={active} loading={loading === p.id} isEliminated={false} />)}
+                  {!(grouped[opt.id]?.length) && active && <div style={{ fontSize: '.78rem', color: opt.color + '80', fontStyle: 'italic' }}>Drop someone here...</div>}
+                </div>
               </div>
-              <span style={{
-                background: opt.color, color: 'white', borderRadius: 99,
-                padding: '.15rem .6rem', fontSize: '.75rem', fontWeight: 800,
-              }}>{(grouped[opt.id] || []).length}</span>
-            </div>
-
-            {/* Assigned people */}
-            <div style={{ padding: '.75rem', minHeight: 80, display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignContent: 'flex-start' }}>
-              {(grouped[opt.id] || []).map(p => (
-                <PersonChip key={p.id} profile={p} options={options} currentOptionId={opt.id} onAssign={assign} active={active} loading={loading === p.id} isEliminated={false} />
-              ))}
-              {!(grouped[opt.id]?.length) && active && (
-                <div style={{ fontSize: '.78rem', color: opt.color + '80', fontStyle: 'italic' }}>Drop someone here...</div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {/* Eliminated Options */}
-        {eliminatedOptions.map(opt => (
-          <div
-            key={opt.id}
-            style={{
-              border: `2px dashed var(--border)`,
-              borderRadius: 'var(--r-lg)',
-              overflow: 'hidden',
-              background: 'var(--surface-2)',
-              filter: 'grayscale(1)',
-              opacity: 0.8,
-            }}
-          >
-            {/* Option header */}
-            <div style={{
-              padding: '.85rem 1rem',
-              background: 'var(--surface)',
-              borderBottom: `1.5px solid var(--border)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                <span style={{ fontSize: '1.3rem' }}>❌</span>
-                <span style={{ fontWeight: 900, fontSize: '.95rem', color: 'var(--text-2)', textDecoration: 'line-through' }}>{opt.name}</span>
+            );
+          } else {
+            return (
+              <div key={opt.id} style={{ border: `2px dashed var(--border)`, borderRadius: 'var(--r-lg)', overflow: 'hidden', background: 'var(--surface-2)', filter: 'grayscale(1)', opacity: 0.8 }}>
+                <div style={{ padding: '.85rem 1rem', background: 'var(--surface)', borderBottom: `1.5px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                    <span style={{ fontSize: '1.3rem' }}>❌</span>
+                    <span style={{ fontWeight: 900, fontSize: '.95rem', color: 'var(--text-2)', textDecoration: 'line-through' }}>{opt.name}</span>
+                  </div>
+                  <span style={{ background: 'var(--text-3)', color: 'white', borderRadius: 99, padding: '.15rem .6rem', fontSize: '.75rem', fontWeight: 800 }}>{(grouped[opt.id] || []).length}</span>
+                </div>
+                <div style={{ padding: '.75rem', minHeight: 80, display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignContent: 'flex-start' }}>
+                  {(grouped[opt.id] || []).map(p => <PersonChip key={p.id} profile={p} options={options} currentOptionId={opt.id} onAssign={assign} active={active} loading={loading === p.id} isEliminated={true} />)}
+                </div>
               </div>
-              <span style={{
-                background: 'var(--text-3)', color: 'white', borderRadius: 99,
-                padding: '.15rem .6rem', fontSize: '.75rem', fontWeight: 800,
-              }}>{(grouped[opt.id] || []).length}</span>
-            </div>
-
-            {/* Assigned people */}
-            <div style={{ padding: '.75rem', minHeight: 80, display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignContent: 'flex-start' }}>
-              {(grouped[opt.id] || []).map(p => (
-                <PersonChip key={p.id} profile={p} options={options} currentOptionId={opt.id} onAssign={assign} active={active} loading={loading === p.id} isEliminated={true} />
-              ))}
-            </div>
-          </div>
-        ))}
+            );
+          }
+        })}
       </div>
     </div>
   );
