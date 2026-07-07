@@ -101,27 +101,49 @@ export default async function HomePage() {
                 className={`card fade-up delay-${Math.min(i + 1, 6)}`}
                 style={{ display: 'block' }}
               >
-                {/* Cover */}
-                <div style={{ height: '200px', overflow: 'hidden', background: 'var(--surface-2)', position: 'relative' }}>
+                {/* Cover — ratio box so image always fills perfectly */}
+                <div style={{ position: 'relative', paddingBottom: '72%', background: 'var(--surface-2)', overflow: 'hidden' }}>
                   {cover ? (
-                    <img src={cover} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                      src={cover}
+                      alt={profile.call_name}
+                      style={{
+                        position: 'absolute', inset: 0,
+                        width: '100%', height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center top', /* prioritise faces */
+                      }}
+                    />
                   ) : (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
                       👤
                     </div>
                   )}
+
+                  {/* Gradient scrim at bottom */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 50%)',
+                    pointerEvents: 'none',
+                  }} />
+
+                  {/* Name overlay on image */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '.75rem 1rem',
+                  }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', textShadow: '0 1px 6px rgba(0,0,0,.6)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                      {profile.call_name}
+                    </div>
+                    <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.7)', fontWeight: 600, marginTop: '.1rem' }}>
+                      aka {profile.name}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="card-body">
-                  <div style={{ fontSize: '1.3rem', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: '.15rem' }}>
-                    {profile.call_name}
-                  </div>
-                  <div style={{ fontSize: '.82rem', color: 'var(--text-3)', marginBottom: '.85rem' }}>
-                    aka {profile.name}
-                  </div>
-
+                <div className="card-body" style={{ padding: '.85rem 1rem' }}>
                   {/* Mini stats */}
-                  <div className="flex gap-1" style={{ marginBottom: '.85rem', fontSize: '.8rem', color: 'var(--text-2)', fontWeight: 600 }}>
+                  <div className="flex gap-1" style={{ marginBottom: '.7rem', fontSize: '.8rem', color: 'var(--text-2)', fontWeight: 600 }}>
                     <span>📸 {photos.length}</span>
                     <span>·</span>
                     <span>👍 {totalL}</span>
