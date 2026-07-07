@@ -7,11 +7,9 @@ import { useEffect, useState } from 'react';
 const LINKS = [
   { href: '/',               label: '🏠', text: 'Home' },
   { href: '/feed',           label: '📰', text: 'Feed' },
-  { href: '/hall-of-fame',   label: '🏆', text: 'Fame' },
   { href: '/lounge',         label: '🎙️', text: 'Lounge' },
-  { href: '/world-cup',      label: '⚽', text: 'Cup' },
   { href: '/battles',        label: '⚔️', text: '1v1' },
-  { href: '/leaderboard',    label: '🏆', text: 'Ranks' },
+  { href: '/world-cup',      label: '⚽', text: 'Cup' },
 ];
 
 export default function MobileBottomNav() {
