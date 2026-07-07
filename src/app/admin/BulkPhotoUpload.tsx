@@ -32,7 +32,6 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
     }));
 
     setItems(prev => [...prev, ...newItems]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeItem = (id: string) => {
@@ -55,6 +54,7 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
       const item = items[i];
       if (item.status === 'done') continue;
 
+      let step = 'Compression';
       try {
         // 1. Compress
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'compressing' } : x));
@@ -66,6 +66,7 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
         });
 
         // 2. Upload
+        step = 'Upload';
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'uploading' } : x));
         
         const fd = new FormData();
@@ -76,7 +77,8 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
 
         setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'done' } : x));
       } catch (err: any) {
-        setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'error', errorMsg: err.message } : x));
+        const msg = err instanceof Error ? err.message : String(err);
+        setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'error', errorMsg: `${step} error: ${msg}` } : x));
       }
     }
 
@@ -107,6 +109,7 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
           multiple 
           accept="image/*" 
           onChange={handleFiles}
+          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
           ref={fileInputRef}
           style={{ display: 'none' }} 
         />
