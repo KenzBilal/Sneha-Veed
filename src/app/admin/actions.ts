@@ -100,3 +100,14 @@ export async function getPhotosByProfileId(profileId: string) {
     .order('uploaded_at', { ascending: false });
   return data || [];
 }
+
+export async function adminDeletePhoto(photoId: string, profileId: string) {
+  const { error } = await supabase.from('photos').delete().eq('id', photoId);
+  if (error) throw new Error(error.message);
+  revalidatePath('/');
+  revalidatePath('/feed');
+  revalidatePath('/leaderboard');
+  revalidatePath('/hall-of-shame');
+  revalidatePath('/hall-of-fame');
+  revalidatePath(`/profile/${profileId}`);
+}

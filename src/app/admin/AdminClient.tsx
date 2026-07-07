@@ -230,6 +230,22 @@ export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
     setUploadFile(named);
   };
 
+  const handleDeletePhoto = async (e: React.MouseEvent, photoId: string) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this photo? This will remove all roasts and likes on it.')) return;
+    setStatus('loading');
+    setMsg('');
+    try {
+      const { adminDeletePhoto } = await import('./actions');
+      await adminDeletePhoto(photoId, profileId);
+      setMsg('✅ Photo deleted!');
+      fetchPhotos(profileId); // reload photos
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err: any) {
+      setMsg('❌ ' + err.message);
+    } finally { setStatus('idle'); }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileId) { setMsg('❌ Select a profile'); return; }
@@ -241,6 +257,7 @@ export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
       fd.set('profileId', profileId);
       if (selected) fd.set('existingUrl', selected);
       if (uploadFile && !selected) fd.set('file', uploadFile);
+      const { adminUpdateProfilePic } = await import('./actions');
       await adminUpdateProfilePic(fd);
       setMsg('✅ Profile photo updated!');
       setTimeout(() => setMsg(''), 3000);
@@ -267,7 +284,7 @@ export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
       {/* Existing photos grid */}
       {profileId && (
         <div>
-          <label className="field-label">Choose Existing Photo</label>
+          <label className="field-label">Manage Photos & Profile Picture</label>
           {loadingPhotos ? (
             <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-3)', fontSize: '.85rem' }}>Loading photos...</div>
           ) : photos.length === 0 ? (
@@ -300,6 +317,20 @@ export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
                       fontSize: '1.5rem',
                     }}>✅</div>
                   )}
+                  {/* Delete Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeletePhoto(e, ph.id)}
+                    style={{
+                      position: 'absolute', top: 4, right: 4, zIndex: 10,
+                      background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
+                      width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: '.8rem',
+                    }}
+                    title="Delete Photo"
+                  >
+                    🗑️
+                  </button>
                 </div>
               ))}
             </div>
