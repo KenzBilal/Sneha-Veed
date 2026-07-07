@@ -38,7 +38,7 @@ export async function adminCreateProfile(formData: FormData) {
   if (error) throw new Error('Failed to create profile: ' + error.message);
 
   revalidatePath('/');
-  revalidatePath('/admin');
+  revalidatePath('/admin', 'layout');
   return id;
 }
 
@@ -52,7 +52,7 @@ export async function adminAddPhoto(formData: FormData) {
   const { error } = await createPhoto({ id: crypto.randomUUID(), profile_id: profileId, url });
   if (error) throw new Error('Failed to add photo: ' + error.message);
 
-  revalidatePath('/admin');
+  revalidatePath('/admin', 'layout');
   revalidatePath('/feed');
   revalidatePath(`/profile/${profileId}`);
 }
@@ -60,7 +60,7 @@ export async function adminAddPhoto(formData: FormData) {
 export async function adminDeleteProfile(profileId: string) {
   await dbDeleteProfile(profileId);
   revalidatePath('/');
-  revalidatePath('/admin');
+  revalidatePath('/admin', 'layout');
 }
 
 export async function adminUpdateProfilePic(formData: FormData) {
