@@ -280,6 +280,7 @@ export interface CampaignOption {
   emoji: string;
   color: string;
   sort_order: number;
+  eliminated?: boolean;
 }
 
 export interface CampaignVote {
@@ -304,12 +305,12 @@ export async function getCampaign(id: string): Promise<Campaign | undefined> {
 }
 
 export async function getCampaignOptions(campaignId: string): Promise<CampaignOption[]> {
-  const { data } = await supabase
-    .from('campaign_options')
-    .select('*')
-    .eq('campaign_id', campaignId)
-    .order('sort_order');
+  const { data } = await supabase.from('campaign_options').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true });
   return data || [];
+}
+
+export async function toggleOptionEliminated(id: string, eliminated: boolean) {
+  return await supabase.from('campaign_options').update({ eliminated }).eq('id', id);
 }
 
 export async function getCampaignVotes(campaignId: string): Promise<CampaignVote[]> {

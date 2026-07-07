@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { getProfiles, getPhotosByProfile } from '@/lib/db';
+import { getProfiles, getPhotosByProfile, getCampaignOptions } from '@/lib/db';
 import { CreateProfileForm, AddPhotoForm, ProfilesTable, UpdateProfilePicForm } from './AdminClient';
+import { WorldCupEliminationBoard } from './WorldCupAdminControls';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '⚙️ Admin | Sneha Veed' };
@@ -26,6 +27,8 @@ export default async function AdminPage() {
       return { ...p, photoCount: photos.length };
     })
   );
+
+  const worldCupOptions = await getCampaignOptions('c0000000-0000-0000-0000-000000000001');
 
   return (
     <>
@@ -135,6 +138,16 @@ export default async function AdminPage() {
           </div>
           <div style={{ padding: '0' }}>
             <ProfilesTable profiles={profilesWithCount} />
+          </div>
+        </div>
+
+        {/* WORLD CUP CONTROLS */}
+        <div className="card fade-up delay-4" style={{ marginTop: '2rem' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900 }}>⚽ World Cup Knockouts</div>
+          </div>
+          <div className="card-body">
+            <WorldCupEliminationBoard options={worldCupOptions} />
           </div>
         </div>
       </div>
