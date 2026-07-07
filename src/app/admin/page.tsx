@@ -1,8 +1,9 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getProfiles, getPhotosByProfile, getCampaignOptions } from '@/lib/db';
-import { CreateProfileForm, AddPhotoForm, ProfilesTable, UpdateProfilePicForm } from './AdminClient';
+import { CreateProfileForm, ProfilesTable, UpdateProfilePicForm } from './AdminClient';
 import { WorldCupEliminationBoard } from './WorldCupAdminControls';
+import { BulkPhotoUpload } from './BulkPhotoUpload';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '⚙️ Admin | Sneha Veed' };
@@ -85,12 +86,12 @@ export default async function AdminPage() {
             </div>
           </div>
 
-          {/* ADD PHOTO */}
+          {/* BULK ADD PHOTOS */}
           <div className="card fade-up delay-2">
             <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'var(--wood-light)' }}>
-              <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--wood-dark)' }}>📸 Add Photo to Profile</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--wood-dark)' }}>📸 Bulk Upload Photos</div>
               <div style={{ fontSize: '.82rem', color: 'var(--wood-dark)', opacity: .7, marginTop: '.2rem' }}>
-                Upload initial photos. Anyone can also upload from the profile page.
+                Upload multiple photos at once. Select friend for each.
               </div>
             </div>
             <div className="card-body">
@@ -100,7 +101,7 @@ export default async function AdminPage() {
                   <div className="empty-sub">Create a profile first!</div>
                 </div>
               ) : (
-                <AddPhotoForm profiles={profiles} />
+                <BulkPhotoUpload profiles={profiles} />
               )}
             </div>
           </div>
@@ -140,6 +141,8 @@ export default async function AdminPage() {
             <ProfilesTable profiles={profilesWithCount} />
           </div>
         </div>
+
+
 
         {/* WORLD CUP CONTROLS */}
         <div className="card fade-up delay-4" style={{ marginTop: '2rem' }}>
