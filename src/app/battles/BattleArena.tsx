@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { submitBattleVote } from './actions';
+import { emojiPop } from '@/lib/emojiPop';
 import type { Profile, BattleQuestion } from '@/lib/db';
 
 type ProfileWithCover = Profile & { cover: string | null };
@@ -28,12 +29,16 @@ export default function BattleArena({ profiles, questions }: Props) {
     }
   }, [profiles, questions]);
 
-  const handleVote = (winner: 'p1' | 'p2') => {
+  const handleVote = (winner: 'p1' | 'p2', e: React.MouseEvent) => {
     if (!p1 || !p2 || !q || animating) return;
 
     const winnerId = winner === 'p1' ? p1.id : p2.id;
     const loserId = winner === 'p1' ? p2.id : p1.id;
     const loserSide = winner === 'p1' ? 'right' : 'left';
+
+    // Emoji burst on winner side
+    emojiPop('🏆', e, { count: 4, spread: 60 });
+    setTimeout(() => emojiPop('✨', e, { count: 3, spread: 80 }), 80);
 
     // Start exit animation for loser
     setAnimating(loserSide);
@@ -86,7 +91,7 @@ export default function BattleArena({ profiles, questions }: Props) {
         
         {/* Player 1 */}
         <div
-          onClick={() => handleVote('p1')}
+          onClick={e => handleVote('p1', e)}
           style={{
             cursor: animating ? 'default' : 'pointer',
             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -111,7 +116,7 @@ export default function BattleArena({ profiles, questions }: Props) {
 
         {/* Player 2 */}
         <div
-          onClick={() => handleVote('p2')}
+          onClick={e => handleVote('p2', e)}
           style={{
             cursor: animating ? 'default' : 'pointer',
             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
