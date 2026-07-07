@@ -52,3 +52,20 @@ export async function roastPhoto(photoId: string, profileId: string) {
   await dbRoast(photoId);
   revalidatePath(`/profile/${profileId}`);
 }
+
+export async function getProfilesList() {
+  const { data } = await supabase.from('profiles').select('id, name, call_name').order('name');
+  return data || [];
+}
+
+export async function movePhoto(photoId: string, oldProfileId: string, newProfileId: string) {
+  const { error } = await supabase.from('photos').update({ profile_id: newProfileId }).eq('id', photoId);
+  if (error) throw new Error(error.message);
+  revalidatePath('/');
+  revalidatePath('/feed');
+  revalidatePath('/leaderboard');
+  revalidatePath('/hall-of-fame');
+  revalidatePath('/hall-of-shame');
+  revalidatePath(`/profile/${oldProfileId}`);
+  revalidatePath(`/profile/${newProfileId}`);
+}
