@@ -10,12 +10,15 @@ export const metadata: Metadata = {
   description: "Upload embarrassing pics of your friends. Vote. Roast. Survive.",
 };
 
+import MobileBottomNav from "@/components/MobileBottomNav";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={geist.variable}>
       <body>
         <Navbar />
         {children}
+        <MobileBottomNav />
       </body>
     </html>
   );
