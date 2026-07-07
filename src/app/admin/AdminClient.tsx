@@ -363,6 +363,34 @@ export function UpdateProfilePicForm({ profiles }: { profiles: Profile[] }) {
 // ===================== PROFILES TABLE =====================
 export function ProfilesTable({ profiles }: { profiles: (Profile & { photoCount: number })[] }) {
   const [deleting, setDeleting] = useState<string | null>(null);
+  
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCallName, setEditCallName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = (p: Profile) => {
+    setEditingId(p.id);
+    setEditName(p.name);
+    setEditCallName(p.call_name);
+    setEditBio(p.description || '');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    try {
+      const { updateProfileDetails } = await import('@/app/actions');
+      await updateProfileDetails(editingId, editName, editCallName, editBio);
+      setEditingId(null);
+    } catch (err: any) {
+      alert('Save failed: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const del = async (id: string, name: string) => {
     if (!confirm(`Delete ${name}? This removes their profile. Photos stay.`)) return;
@@ -375,36 +403,76 @@ export function ProfilesTable({ profiles }: { profiles: (Profile & { photoCount:
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
         <thead>
           <tr style={{ background: 'var(--surface-2)', textAlign: 'left' }}>
-            {['Pic', 'Call Name', 'Real Name', 'Bio', 'Photos', ''].map(h => (
+            {['Pic', 'Call Name', 'Real Name', 'Bio', 'Photos', 'Actions'].map(h => (
               <th key={h} style={{ padding: '.6rem .9rem', fontWeight: 700, color: 'var(--text-2)', whiteSpace: 'nowrap', borderBottom: '2px solid var(--border)' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {profiles.map((p, i) => (
-            <tr key={p.id} style={{ background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
-              <td style={{ padding: '.6rem .9rem' }}>
-                {p.profile_pic
-                  ? <img src={p.profile_pic} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                  : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--green-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>👤</div>
-                }
-              </td>
-              <td style={{ padding: '.6rem .9rem', fontWeight: 800 }}>{p.call_name}</td>
-              <td style={{ padding: '.6rem .9rem', color: 'var(--text-2)' }}>{p.name}</td>
-              <td style={{ padding: '.6rem .9rem', color: 'var(--text-3)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '—'}</td>
-              <td style={{ padding: '.6rem .9rem', fontWeight: 700 }}>{p.photoCount}</td>
-              <td style={{ padding: '.6rem .9rem' }}>
-                <button
-                  onClick={() => del(p.id, p.call_name)}
-                  disabled={deleting === p.id}
-                  className="btn btn-xs"
-                  style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', fontWeight: 700 }}
-                >
-                  {deleting === p.id ? '...' : '🗑️ Delete'}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {profiles.map((p, i) => {
+            const isEditing = editingId === p.id;
+            
+            return (
+              <tr key={p.id} style={{ background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '.6rem .9rem' }}>
+                  {p.profile_pic
+                    ? <img src={p.profile_pic} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                    : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--green-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>👤</div>
+                  }
+                </td>
+                
+                {/* Call Name */}
+                <td style={{ padding: '.6rem .9rem', fontWeight: 800 }}>
+                  {isEditing ? (
+                    <input className="field-input" value={editCallName} onChange={e => setEditCallName(e.target.value)} style={{ padding: '.2rem .4rem' }} />
+                  ) : p.call_name}
+                </td>
+                
+                {/* Real Name */}
+                <td style={{ padding: '.6rem .9rem', color: isEditing ? 'var(--text)' : 'var(--text-2)' }}>
+                  {isEditing ? (
+                    <input className="field-input" value={editName} onChange={e => setEditName(e.target.value)} style={{ padding: '.2rem .4rem' }} />
+                  ) : p.name}
+                </td>
+                
+                {/* Bio */}
+                <td style={{ padding: '.6rem .9rem', color: isEditing ? 'var(--text)' : 'var(--text-3)', maxWidth: 200, whiteSpace: isEditing ? 'normal' : 'nowrap', overflow: isEditing ? 'visible' : 'hidden', textOverflow: 'ellipsis' }}>
+                  {isEditing ? (
+                    <textarea className="field-input" value={editBio} onChange={e => setEditBio(e.target.value)} rows={2} style={{ padding: '.2rem .4rem' }} />
+                  ) : (p.description || '—')}
+                </td>
+                
+                <td style={{ padding: '.6rem .9rem', fontWeight: 700 }}>{p.photoCount}</td>
+                
+                <td style={{ padding: '.6rem .9rem', display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+                  {isEditing ? (
+                    <>
+                      <button onClick={saveEdit} disabled={saving} className="btn btn-xs btn-green" style={{ padding: '.2rem .6rem' }}>
+                        {saving ? '⏳' : '💾 Save'}
+                      </button>
+                      <button onClick={() => setEditingId(null)} disabled={saving} className="btn btn-xs btn-outline" style={{ padding: '.2rem .6rem' }}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEdit(p)} className="btn btn-xs btn-outline" style={{ padding: '.2rem .6rem' }}>
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => del(p.id, p.call_name)}
+                        disabled={deleting === p.id}
+                        className="btn btn-xs"
+                        style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', fontWeight: 700, padding: '.2rem .6rem' }}
+                      >
+                        {deleting === p.id ? '...' : '🗑️'}
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
           {profiles.length === 0 && (
             <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-3)' }}>No profiles yet</td></tr>
           )}

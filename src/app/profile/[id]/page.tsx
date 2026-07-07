@@ -3,7 +3,6 @@ import { getProfile, getPhotosByProfile, calculateTags, getProfileStats } from '
 import Uploader from '@/components/Uploader';
 import PhotoActions from '@/components/PhotoActions';
 import TagBadge from '@/components/TagBadge';
-import EditProfileForm from '@/components/EditProfileForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +39,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <img src={photos[0].url} alt={profile.name} />
           ) : '👤'}
         </div>
-        
-        <EditProfileForm profile={profile} tags={tags} />
+        <h1 className="profile-call-name">{profile.call_name}</h1>
+        <p className="profile-real-name">aka {profile.name}</p>
+        <p className="profile-bio">"{profile.description}"</p>
+        <div className="profile-tags">
+          {tags.map(t => <TagBadge key={t.label} tag={t} />)}
+        </div>
       </div>
 
       {/* STATS */}
