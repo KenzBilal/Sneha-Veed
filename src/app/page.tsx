@@ -117,29 +117,27 @@ export default async function HomePage() {
                 className={`card fade-up delay-${Math.min(i + 1, 6)}`}
                 style={{ display: 'block' }}
               >
-                {/* Cover — ratio box so image always fills perfectly */}
-                <div style={{ position: 'relative', paddingBottom: '72%', background: 'var(--surface-2)', overflow: 'hidden' }}>
+                {/* Cover — full image, no cropping */}
+                <div style={{ background: 'var(--surface-2)', position: 'relative' }}>
                   {cover ? (
                     <img
                       src={cover}
                       alt={profile.call_name}
                       style={{
-                        position: 'absolute', inset: 0,
-                        width: '100%', height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center top', /* prioritise faces */
+                        width: '100%', height: 'auto', display: 'block',
+                        maxHeight: '400px', objectFit: 'contain', background: '#000'
                       }}
                     />
                   ) : (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
+                    <div style={{ padding: '3rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
                       👤
                     </div>
                   )}
 
                   {/* Gradient scrim at bottom */}
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 50%)',
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
+                    background: 'linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%)',
                     pointerEvents: 'none',
                   }} />
 
