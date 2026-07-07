@@ -69,3 +69,17 @@ export async function movePhoto(photoId: string, oldProfileId: string, newProfil
   revalidatePath(`/profile/${oldProfileId}`);
   revalidatePath(`/profile/${newProfileId}`);
 }
+
+export async function updateProfileDetails(id: string, name: string, callName: string, bio: string) {
+  const { error } = await supabase.from('profiles').update({
+    name,
+    call_name: callName,
+    description: bio
+  }).eq('id', id);
+  if (error) throw new Error(error.message);
+  
+  revalidatePath('/');
+  revalidatePath(`/profile/${id}`);
+  revalidatePath('/leaderboard');
+  revalidatePath('/battles');
+}
