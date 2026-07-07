@@ -40,10 +40,10 @@ export default function Uploader({ profileId }: { profileId: string }) {
             URL.revokeObjectURL(url);
             const canvas = document.createElement('canvas');
             
-            // Max size 1920x1920
+            // Max size 1080x1080
+            const max = 1080;
             let width = img.width;
             let height = img.height;
-            const max = 1920;
             if (width > max || height > max) {
               if (width > height) { height = Math.round((height * max) / width); width = max; }
               else { width = Math.round((width * max) / height); height = max; }
@@ -61,7 +61,7 @@ export default function Uploader({ profileId }: { profileId: string }) {
                 else reject(new Error('Canvas toBlob failed'));
               },
               'image/webp',
-              0.8
+              0.6
             );
           };
           img.onerror = () => {

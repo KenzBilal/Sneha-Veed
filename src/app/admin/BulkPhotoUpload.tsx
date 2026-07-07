@@ -67,10 +67,10 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
             URL.revokeObjectURL(url);
             const canvas = document.createElement('canvas');
             
-            // Max size 1920x1920 to prevent memory crashes on huge images
+            // Max size 1080x1080 to save storage space
             let width = img.width;
             let height = img.height;
-            const max = 1920;
+            const max = 1080;
             if (width > max || height > max) {
               if (width > height) { height = Math.round((height * max) / width); width = max; }
               else { width = Math.round((width * max) / height); height = max; }
@@ -88,7 +88,7 @@ export function BulkPhotoUpload({ profiles }: { profiles: Profile[] }) {
                 else reject(new Error('Canvas toBlob failed'));
               },
               'image/webp',
-              0.8
+              0.6
             );
           };
           
