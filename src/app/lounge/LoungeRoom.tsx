@@ -12,26 +12,29 @@ import '@livekit/components-styles';
 
 interface Props {
   profileId: string;
+  onLeave: () => void;
 }
 
-export default function LoungeRoom({ profileId }: Props) {
+export default function LoungeRoom({ profileId, onLeave }: Props) {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
     (async () => {
       try {
         const res = await fetch(`/api/livekit?profileId=${profileId}`);
         const data = await res.json();
         if (data.error) {
-          setError(data.error);
+          if (active) setError(data.error);
           return;
         }
-        setToken(data.token);
+        if (active) setToken(data.token);
       } catch (e: any) {
-        setError(e.message);
+        if (active) setError(e.message);
       }
     })();
+    return () => { active = false; };
   }, [profileId]);
 
   if (error) {
@@ -41,6 +44,7 @@ export default function LoungeRoom({ profileId }: Props) {
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
           <h2 style={{ color: 'var(--red)', marginBottom: '1rem' }}>Connection Error</h2>
           <p>{error}</p>
+          <button onClick={onLeave} className="btn" style={{ marginTop: '1.5rem' }}>Back</button>
         </div>
       </div>
     );
@@ -65,6 +69,7 @@ export default function LoungeRoom({ profileId }: Props) {
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       data-lk-theme="default"
+      onDisconnected={onLeave}
       style={{
         display: 'flex', flexDirection: 'column',
         background: 'var(--surface)', borderRadius: 'var(--r-lg)',
